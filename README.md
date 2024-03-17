@@ -3,9 +3,10 @@
 ## Testnet Deployment
 
 ### Linea
+[0x82322b23Dcd8a9dfB721e2c7DF367a86BAdF6D76](https://explorer.goerli.linea.build/address/0x82322b23Dcd8a9dfB721e2c7DF367a86BAdF6D76)
 
 ### Polygon zkEVM
-
+[0x25422Ad58119BC756343B13295BB8CA0F274c8ba](https://testnet-zkevm.polygonscan.com/address/0x25422Ad58119BC756343B13295BB8CA0F274c8ba)
 
 ## Overview
 

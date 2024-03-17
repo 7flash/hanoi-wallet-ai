@@ -143,3 +143,28 @@ It can leverage methods exposed by Spatial Environment:
 
 ### Add Message Embeddings
 [config.yml](./scenarios/config.yml)
+
+Note, that Embeddings Server is implemented in Python and acts as a Proxy in between of voice command being triggered in Spatial Environment and Scenario actually starting its execution. It derives corresponding scenario from user intention as shown in following algorithm:
+
+```
+    similarities = {}
+    for message in scenario.message_to_intent.keys():
+        similarity = cosine_similarity(
+            user_msg_embedding, scenario.category_embeddings[message]
+        )
+        intent = scenario.message_to_intent[message]
+        if intent in similarities:
+            similarities[intent]["sum"] += similarity
+            similarities[intent]["count"] += 1
+        else:
+            similarities[intent] = {"sum": similarity, "count": 1}
+
+    average_similarities = [
+        (intent, similarities[intent]["sum"] / similarities[intent]["count"])
+        for intent in similarities
+    ]
+
+    sorted_intents = sorted(
+        average_similarities, key=lambda x: x[1], reverse=True
+    )
+```

@@ -1,3 +1,17 @@
+# Concept
+
+Our project revolves around the idea of using AI to interpret voice commands from users and execute predefined scenarios on a 2D whiteboard canvas. These scenarios are specifically designed to visualize blockchain smart contract transactions, providing a unique and interactive way to understand and engage with blockchain technology.
+
+## How it Works
+
+1. **Voice Recognition:** The first step involves voice recognition. Our system is designed to understand natural language, allowing you to interact with it as you would with a human. We use vector embeddings to approximate the meaning of user voice replicas, ensuring accurate interpretation of your commands.
+
+2. **Predefined AI Scenarios:** Once the system understands your command, it triggers a predefined AI scenario. These scenarios are not generated on-the-fly but are pre-programmed to correspond to specific user intentions related to blockchain smart contract transactions.
+
+3. **Integrated Spatial Environment:** The triggered scenario is visualized on a 2D whiteboard canvas, which serves as the integrated spatial environment. This interactive platform allows you to see your blockchain transactions come to life.
+
+4. **Visually Guided Transaction Execution:** The system provides a visually guided transaction execution on the canvas. It offers visual cues and prompts to guide you through the process, making it an intuitive way to understand the intricacies of your transactions.
+
 # HTLC Smart Contract
 
 ## Testnet Deployment
@@ -37,3 +51,95 @@ This function is used by the sender to refund a swap. The sender must provide th
 ## Usage
 
 To use this contract, first deploy it to the Ethereum network. Then, to initiate a swap, call the `initiateSwap` function with the appropriate parameters and send some ether. The receiver can then call `completeSwap` with the swap ID and the preimage to claim the funds. If the receiver does not do this before the timelock expires, the sender can call `refundSwap` to get their funds back. It's a pretty straightforward process, but make sure you keep track of your swap IDs and preimages!
+
+# Setup/Contribute
+
+### 1. Initialize Spatial Environment
+
+It should expose render function like this:
+
+```
+window.render = (anchorText: string, value: string) => {
+  const ea = window.ea as ExcalidrawAPI;
+
+  const { id: anchorElId, groupIds } = ea.getSceneElements().find(it => it.text == anchorText)
+
+  const { id: targetElId } = ea.getSceneElements().find(it => it.type == 'text' && it.id != anchorElId && it.groupIds.some((vit) => groupIds.includes(vit)))
+
+  ea.updateScene({
+    elements: ea.getSceneElements().map((it) => {
+      if (it.id == targetElId) {
+        it.text = value.toString()
+        it.originalText = value.toString()
+        it.rawText = value.toString()
+        it.version++
+
+        const metrics = window.measureText(
+          it.text,
+          getFontString(it),
+          it.lineHeight,
+        );
+        it.width = metrics.width;
+        it.height = metrics.height;
+        it.baseline = metrics.baseline;
+      }
+      return {
+        ...it
+      }
+    })
+  })
+}
+```
+
+### 2. Initialize Wallets
+
+```
+import { mainnet, lineaTestnet, polygonZkEvmTestnet } from 'viem/chains'
+import { formatEther, formatGwei, formatUnits, parseEther, parseGwei, createWalletClient, custom, createPublicClient, http } from 'viem'
+import { eip712WalletActions } from 'viem/zksync'
+import { publicActionReverseMirage, amountToNumber } from 'reverse-mirage'
+import { publicActionCovalent } from '@covalenthq/client-viem-sdk'
+
+const apiKey = ""
+
+window.publicLineaClient = createPublicClient({
+  chain: lineaTestnet,
+  transport: http(),
+}).extend(publicActionReverseMirage).extend(publicActionCovalent(apiKey))
+
+window.publicPolygonClient = createPublicClient({
+  chain: polygonZkEvmTestnet,
+  transport: http(),
+}).extend(publicActionReverseMirage).extend(publicActionCovalent(apiKey))
+
+window.publicEthClient = createPublicClient({
+  chain: mainnet,
+  transport: http()
+}).extend(publicActionReverseMirage).extend(publicActionCovalent(apiKey))
+
+window.walletLineaClient = createWalletClient({
+  chain: lineaTestnet,
+  transport: custom(window.ethereum!)
+}).extend(publicActionReverseMirage).extend(publicActionCovalent(apiKey))
+
+window.walletPolygonClient = createWalletClient({
+  chain: polygonZkEvmTestnet,
+  transport: custom(window.ethereum!),
+}).extend(eip712WalletActions()).extend(publicActionReverseMirage).extend(publicActionCovalent(apiKey))
+
+window.utils = { formatEther, formatGwei, formatUnits, parseEther, parseGwei, amountToNumber }
+```
+
+### Add Scenario Scripts
+Each method in smart contract should have corresponding scenario like [InitiateSwap](./scenarios/InitiateSwap.js)
+
+It can leverage methods exposed by Spatial Environment:
+
+*window.render* accepts text/image for rendering in position determined by provided anchor
+
+*window.publicClient* allows to query RPC nodes
+
+*window.walletClient* allows to trigger Metamask transactions
+
+### Add Message Embeddings
+[config.yml](./scenarios/config.yml)
